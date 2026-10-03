@@ -1,19 +1,10 @@
 const axios = require('axios');
 
-// بيانات مؤقتة
-let memoryPosts = [
-    {
-        id: '1',
-        author: 'أحمد',
-        party: 'حزب التكنولوجيا',
-        userAvatar: '',
-        image: 'https://i.ibb.co/L8v8m2y/sample.jpg',
-        timestamp: Date.now()
-    }
-];
+// ذاكرة مؤقتة لتخزين المنشورات
+let memoryPosts = [];
 
 module.exports = async (req, res) => {
-    // إعدادات CORS لتفادي حظر المتصفح
+    // إعدادات CORS لمنع الحظر في المتصفح
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -23,12 +14,12 @@ module.exports = async (req, res) => {
         return res.status(200).end();
     }
 
-    // جلب المنشورات
+    // 1. جلب المنشورات (GET)
     if (req.method === 'GET') {
         return res.status(200).json({ success: true, posts: memoryPosts });
     }
 
-    // رفع صورة ونشر
+    // 2. رفع صورة جديدة ونشرها (POST)
     if (req.method === 'POST') {
         try {
             const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -38,8 +29,11 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'لم يتم إرسال أي صورة' });
             }
 
+            // تنظيف بيانات Base64
             const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-            const apiKey = process.env.IMGBB_API_KEY || 'c3a4f63d0a218f2d5f0b4d210515152a';
+            
+            // مفتاح ImgBB الجديد الخاص بيك
+            const apiKey = process.env.IMGBB_API_KEY || '5b021cab37a5747d3f9afd173ddf9229';
 
             const formData = new URLSearchParams();
             formData.append('image', cleanBase64);
@@ -50,6 +44,7 @@ module.exports = async (req, res) => {
 
             const imageUrl = imgbbRes.data.data.url;
 
+            // إنشاء المنشور الجديد
             const newPost = {
                 id: Date.now().toString(),
                 author: author || 'عضو موثق',
